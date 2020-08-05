@@ -2,7 +2,6 @@ import { Deck } from '../Deck'
 import { Cards } from '../Cards'
 
 class Request {
-
   async get<T>(url: string): Promise<T> {
     return await fetch(`https://deckofcardsapi.com/api/deck/${url}`, {
       method: 'GET',
