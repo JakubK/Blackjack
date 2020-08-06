@@ -1,6 +1,6 @@
 import { Card } from './Card';
 
-export default class CardToValueConverter {
+export default new class CardToValueConverter {
   private conversionMap: Map<string,number> = new Map([
     ["JACK",2],
     ["QUEEN",3],

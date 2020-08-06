@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-  <title>Getting Started</title>
+  <title>Blackjack</title>
 </head>
 <body>
   <div class="game-menu">
@@ -14,9 +14,7 @@
   <div class="game-table">
     <div class="game-table__hands">
       <div class="game-table__hand">
-        <span>Player <span></span></span>
-        <br/>
-        <span>Points: <strong></strong></span>
+        <span class="game-table__info"></span>
         <div class="game-table__cards">
 
         </div>
@@ -24,12 +22,14 @@
     </div>
     <button class="game-table__draw">Draw a Card</button>
     <button class="game-table__turn">End turn</button>
-    <div>
-      <span class="game-table__info"></span>
-      <button class="game-table__repeat">Play again</button>
-      <button class="game-table__menu">Go back to menu</button>
-    </div>
   </div>
+  <div style="display: none;" class="game-end">
+    <button class="game-table__repeat">Play again</button>
+    <button class="game-table__menu">Go back to menu</button>
+  </div>
+  <style>
+    
+  </style>
   <script src="main.js"></script>
 </body>
 </html>

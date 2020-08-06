@@ -1,4 +1,5 @@
 import Game from './Game'
+import { GameMode } from './GameMode'
 
 const gameMenu:HTMLElement = document.querySelector('.game-menu');
 const gameTable:HTMLElement = document.querySelector('.game-table');
@@ -10,13 +11,6 @@ const multiPlayerBtn = modeButtons[1];
 
 const playersInput:HTMLInputElement = document.querySelector('.game-menu__players');
 
-const handsContainer = document.querySelector('.game-table__hands');
-
-const playAgainBtn = document.querySelector('.game-table__repeat');
-playAgainBtn.addEventListener('click', () => {
-  handsContainer.innerHTML = '';
-});
-
 const backToMenuBtn = document.querySelector('.game-table__menu');
 backToMenuBtn.addEventListener('click', () => {
   gameTable.style.display = 'none';
@@ -27,11 +21,11 @@ let game: Game = new Game();
 singlePlayerBtn.addEventListener('click', async () => { 
   gameMenu.style.display = 'none';
   gameTable.style.display = 'block';
-  await game.startGame(1);
+  await game.startGame(2, GameMode.SinglePlayer);
 });
 
 multiPlayerBtn.addEventListener('click', async () => {
   gameMenu.style.display = 'none';
   gameTable.style.display = 'block';
-  await game.startGame(parseInt(playersInput.value));
+  await game.startGame(parseInt(playersInput.value), GameMode.MultiPlayer);
 });

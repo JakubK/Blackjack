@@ -2,106 +2,105 @@ import { Deck } from "./Deck";
 import { Card } from "./Card";
 import Request from './API/Request'
 import CardToValueConverter from './CardToValueConverter'
-import { Cards } from "./Cards";
+import { GameMode } from './GameMode'
 
 export default class Game {
-
   deck: Deck;
 
   currentPlayer: number;
-  playerPoints: Array<number>;
   playerScore: number;
-  playerAcesCount: number;
 
   winner: number;
   winnerScore: number;
 
-  scores: Array<number>;
-  converter: CardToValueConverter;
   playersCount: number;
+  gameMode: GameMode;
 
   drawCardBtn: HTMLButtonElement;
   endTurnBtn: HTMLButtonElement;
+  playAgainBtn:HTMLButtonElement;
+
+  playerInfoText: HTMLSpanElement;
+  gameTable: HTMLElement;
+  gameEnd: HTMLElement;
 
   constructor() {
-    this.converter = new CardToValueConverter();
     this.drawCardBtn = document.querySelector('.game-table__draw');
     this.endTurnBtn = document.querySelector('.game-table__turn');
+    this.playAgainBtn = document.querySelector('.game-table__repeat');
 
-    this.drawCardBtn.addEventListener('click', async() => {
-      await this.nextCard();
-    })
-    this.endTurnBtn.addEventListener('click', async() => {
-      await this.endTurn()
-    })
+    this.playerInfoText = document.querySelector('.game-table__info');
+    this.gameTable = document.querySelector('.game-table');
+    this.gameEnd = document.querySelector('.game-end');
+
+    this.drawCardBtn.addEventListener('click', async() => await this.nextCard());
+    this.endTurnBtn.addEventListener('click', async() => await this.endTurn());
+    this.playAgainBtn.addEventListener('click', async() => await this.startGame(this.playersCount, this.gameMode));
   }
-
+  updateScore() {
+    this.playerInfoText.innerText = `Gracz ${this.currentPlayer + 1}, ${this.playerScore} punktów`;
+  }
   async endTurn(){
-    //compare to previous champion
-    if(this.playerScore < 22 && this.playerScore > this.winnerScore){
+    if(this.playerScore < 22 && this.playerScore > this.winnerScore){  //compare to previous champion
       this.winner = this.currentPlayer;
       this.winnerScore = this.playerScore;
     }
 
-    if(this.currentPlayer < this.playersCount -1)
+    if(this.currentPlayer < this.playersCount - 1)
       this.currentPlayer++
-    else{ //finalize the game
+    else //finalize the game
+    {
       this.endGame();
+      return;
     }
     await this.startTurn();
   }
-
-  async startGame(playersCount: number) {
-    this.drawCardBtn.style.display = this.endTurnBtn.style.display = 'block';
-    this.winner = this.winnerScore = -1;
-    this.playerPoints = this.scores = [];
+  async startGame(playersCount: number, gameMode: GameMode) {
+    this.gameMode = gameMode;
     this.playersCount = playersCount;
+    this.playerInfoText.innerText = '';
+    this.gameTable.style.display = 'block';
+    this.gameEnd.style.display = 'none';
+    this.winner = this.winnerScore = -1;
     this.deck = await Request.fetchDeck();
     this.currentPlayer = 0;
     this.startTurn();
   }
-
   async startTurn() {
-    console.log(this.currentPlayer + " zaczyna ture")
-    this.playerAcesCount = this.playerScore = 0;
-    const cards:Cards = await Request.fetchCards(this.deck.deck_id,2);
-    cards.cards.forEach(card => {
-      this.evaluatePlayerHand(card);
-    })
+    this.playerScore = 0;
+    const cards = await Request.fetchCards(this.deck.deck_id,2);
+    cards.cards.forEach(card => { this.evaluatePlayerHand(card); })
 
-    if(this.currentPlayer == this.playersCount-1 && this.winner == -1){ //walkover
-      this.winner = this.currentPlayer;
-      this.winnerScore = this.playerScore;
-      this.endGame();
+    if(this.playerScore == 22 || (this.currentPlayer == this.playersCount-1 && this.winner == -1)) //2 aces || walkover
+      this.promoteCurrentPlayer();
+    else if(this.gameMode == GameMode.SinglePlayer && this.currentPlayer == 1){ //evaluate the bot logic
+      const scoreToBeat = this.winnerScore;
+      while(this.playerScore <= scoreToBeat)
+        await this.nextCard();
+      await this.endTurn();  
     }
+  }
+
+  promoteCurrentPlayer(){
+    this.winner = this.currentPlayer;
+    this.winnerScore = this.playerScore;
+    this.endGame();
   }
 
   endGame() {
     console.log('wygrywa gracz ' + this.winner + " z wynikiem " + this.winnerScore);
-    //toggle buttons
-    this.drawCardBtn.style.display = this.endTurnBtn.style.display = 'none';
+    this.gameTable.style.display = 'none';
+    this.gameEnd.style.display = 'block';
   }
 
-  evaluatePlayerHand(newCard: Card){
-    if(newCard.value == 'ACE'){
-      this.playerAcesCount++;
-      console.log('gracz znalazł asa');
-    }
-    if(this.playerAcesCount > 1){ //player won
-      console.log("gracz ma 2 asy, wygrywa");
-      this.winner = this.currentPlayer;
-      this.winnerScore = this.playerScore;
-      this.endGame();
-      return;
-    }
-    const newValue = this.converter.Convert(newCard);
-    this.playerPoints.push(newValue);
+  async evaluatePlayerHand(newCard: Card){
+    const newValue = CardToValueConverter.Convert(newCard);
     this.playerScore += newValue;
-    console.log("gracz " + this.currentPlayer + " podnosi karte o wartosci " + newValue)
-    console.log("gracz " + this.currentPlayer + " ma punktow" + this.playerScore)
-    if(this.playerScore >= 22){ //player lost
-      console.log('gracz ma >=22 pkt więc przegrywa')
-      this.endTurn();
+    this.updateScore();
+    if(this.playerScore >= 22) //player lost
+      await this.endTurn();
+    else if(this.playerScore == 21){ //player won
+      this.promoteCurrentPlayer();
     }
   }
 
