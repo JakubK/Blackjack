@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Blackjack</title>
+  <meta charset="utf-8"/>
 </head>
 <body>
   <div class="game-menu">
@@ -12,23 +13,29 @@
     </div>
   </div>
   <div class="game-table">
-    <div class="game-table__hands">
-      <div class="game-table__hand">
-        <span class="game-table__info"></span>
-        <div class="game-table__cards">
-
-        </div>
-      </div>
+    <span class="game-table__info"></span>
+    <div class="game-table__cards">
+      
     </div>
-    <button class="game-table__draw">Draw a Card</button>
-    <button class="game-table__turn">End turn</button>
+    <div class="game-table__btns">
+      <button class="game-table__draw">Draw a Card</button>
+      <button class="game-table__turn">End turn</button>
+    </div>
   </div>
   <div style="display: none;" class="game-end">
     <button class="game-table__repeat">Play again</button>
     <button class="game-table__menu">Go back to menu</button>
   </div>
   <style>
-    
+    .card{
+      opacity: 1;
+      animation-name: appear;
+      animation-duration: 1s;
+    }
+    @keyframes appear{
+      from { opacity: 0;}
+      to { opacity: 1;}
+    }
   </style>
   <script src="main.js"></script>
 </body>
