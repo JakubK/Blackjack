@@ -6,14 +6,15 @@
 </head>
 <body>
   <div class="game-menu">
-    <button class="game-menu__btn">Singleplayer</button>
+    <button class="game-menu__btn">Tryb jednoosobowy (z botem)</button>
     <div>
-      <input type="number" class="game-menu__players"/>
-      <button class="game-menu__btn">Multiplayer</button>
+      <input placeholder="Liczba graczy" type="number" class="game-menu__players"/></br>
+      <button class="game-menu__btn">Tryb wieloosobowy</button>
     </div>
   </div>
   <div class="game-table">
-    <span class="game-table__info"></span>
+    <span class="game-table__info"></span><br/>
+    <span class="game-table__result"></span>
     <div class="game-table__cards">
       
     </div>
@@ -27,6 +28,9 @@
     <button class="game-table__menu">Go back to menu</button>
   </div>
   <style>
+    .game-menu{
+      display: flex;
+    }
     .card{
       opacity: 1;
       animation-name: appear;

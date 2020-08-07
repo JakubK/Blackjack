@@ -21,6 +21,8 @@ export default class Game {
   playAgainBtn:HTMLButtonElement;
 
   playerInfoText: HTMLSpanElement;
+  gameResultText: HTMLSpanElement;
+
   gameTable: HTMLElement;
   gameEnd: HTMLElement;
   cardsContainer: HTMLElement;
@@ -31,6 +33,8 @@ export default class Game {
     this.playAgainBtn = document.querySelector('.game-table__repeat');
 
     this.playerInfoText = document.querySelector('.game-table__info');
+    this.gameResultText = document.querySelector('.game-table__result');
+
     this.gameTable = document.querySelector('.game-table');
     this.gameEnd = document.querySelector('.game-end');
     this.cardsContainer = document.querySelector('.game-table__cards');
@@ -40,7 +44,7 @@ export default class Game {
     this.playAgainBtn.addEventListener('click', async() => await this.startGame(this.playersCount, this.gameMode));
   }
   updateScore() {
-    this.playerInfoText.innerText = `Gracz ${this.currentPlayer + 1}, ${this.playerScore} punktów`;
+    this.playerInfoText.innerText += `\nGracz ${this.currentPlayer + 1}, ${this.playerScore} punktów`;
   }
   async endTurn(){
     if(this.playerScore < 22 && this.playerScore > this.winnerScore){  //compare to previous champion
@@ -60,7 +64,7 @@ export default class Game {
   async startGame(playersCount: number, gameMode: GameMode) {
     this.gameMode = gameMode;
     this.playersCount = playersCount;
-    this.playerInfoText.innerText = '';
+    this.playerInfoText.innerText = this.gameResultText.innerText = '';
 
     this.gameTable.style.display = this.drawCardBtn.style.display = this.endTurnBtn.style.display = 'block';
     this.gameEnd.style.display = 'none';
@@ -75,24 +79,22 @@ export default class Game {
     this.cardsContainer.innerHTML = '';
     this.playerScore = 0;
     const cards = await Request.fetchCards(this.deck.deck_id,2);
-    await this.evaluateCards(cards.cards, 0, 2);
+    this.evaluateCards(cards.cards, 0, 2);
 
     if(this.playerScore == 22) //2 aces
       this.promoteCurrentPlayer();
     else if(this.gameMode == GameMode.SinglePlayer && this.currentPlayer == 1){ //evaluate the bot logic
-      await this.playBot(this.winnerScore);
+      this.drawCardBtn.style.display = this.endTurnBtn.style.display = 'none';
+      if(this.playerScore > this.winnerScore)
+        this.promoteCurrentPlayer()
+      else{
+        const scoreToBeat = this.winnerScore;
+        while(this.playerScore <= scoreToBeat)
+          await this.nextCard();
+        
+        await this.endTurn();
+      }
     }
-  }
-
-  async playBot(scoreToBeat: number){
-    setTimeout(async() => {
-      if(this.playerScore <= scoreToBeat)
-        await this.nextCard();
-      else
-        this.promoteCurrentPlayer();
-      if(this.playerScore <= scoreToBeat)
-        await this.playBot(scoreToBeat);
-    },2000);
   }
 
   promoteCurrentPlayer(){
@@ -103,9 +105,9 @@ export default class Game {
 
   endGame() {
     if(this.winner == -1)
-      this.playerInfoText.innerText = 'Nikt nie wygrał';
+      this.gameResultText.innerText = 'Nikt nie wygrał';
     else
-      this.playerInfoText.innerText = 'Wygrywa gracz ' + (this.winner+1) + " z wynikiem " + this.winnerScore;
+      this.gameResultText.innerText = 'Wygrywa gracz ' + (this.winner+1) + " z wynikiem " + this.winnerScore;
     this.drawCardBtn.style.display = this.endTurnBtn.style.display = 'none';
     this.gameEnd.style.display = 'block';
   }
@@ -115,14 +117,16 @@ export default class Game {
     this.playerScore += newValue;
     this.cardsContainer.innerHTML += `<img class="card" src="${cards[from].image}"/>`;
     this.updateScore();
-    setTimeout(async() => { 
-      if(this.playerScore >= 22) //player lost
-        await this.endTurn();
-      else if(this.playerScore == 21) //player won
-        this.promoteCurrentPlayer();  
-      if(from < count-1)
-        await this.evaluateCards(cards, from+1,count);
-    }, 1000);
+    if(this.playerScore >= 22){ //player lost{
+      await this.endTurn();
+      return;
+    }
+    else if(this.playerScore == 21){ //player won
+      this.promoteCurrentPlayer();  
+      return;
+    }
+    if(from < count-1)
+      await this.evaluateCards(cards, from+1,count);
   }
 
   async nextCard() {
